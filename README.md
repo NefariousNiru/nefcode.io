@@ -36,13 +36,11 @@
 **NefCode.io** is a company-wise LeetCode tracker that:
 
 ✅ Loads curated company problem lists from CSV
-✅ Tracks completion globally per problem (via LeetCode link)
+✅ Tracks problem completion using checkboxes
+✅ Support for adding comments and time to problems
 ✅ Stores progress locally in browser storage
 ✅ Works fully offline after first load
 ✅ Requires **no accounts, no backend, no database**
-
-If a problem exists across multiple company lists → solving once marks it solved everywhere.
-
 ---
 
 ## 🏗 Core Concepts
