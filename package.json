@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "prepare:data": "node scripts/build-manifest.mjs",
+    "build": "npm run prepare:data && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
