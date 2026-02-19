@@ -109,6 +109,17 @@ function toRelativeUrlFromData(relFromData) {
 	return `data/${parts.join("/")}`;
 }
 
+/**
+ * Exclude non-company datasets from manifest.
+ * Convention: any top-level folder starting with "_" is reserved.
+ * Example: data/_global/video_solutions.csv should be deployed, but not browsable as a company list.
+ */
+function isExcludedFromManifest(relFromData) {
+	const parts = relFromData.split(path.sep);
+	const top = (parts[0] ?? "").trim();
+	return top.startsWith("_");
+}
+
 function main() {
 	if (!fs.existsSync(DATA_DIR)) {
 		console.error(`Missing data dir: ${DATA_DIR}`);
@@ -122,7 +133,12 @@ function main() {
 	copyDir(DATA_DIR, PUBLIC_DATA_DIR);
 
 	// Generate manifest from repo data/ (source of truth)
-	const files = walk(DATA_DIR).filter(isCsv);
+	const files = walk(DATA_DIR)
+		.filter(isCsv)
+		.filter((absPath) => {
+			const relFromData = path.relative(DATA_DIR, absPath);
+			return !isExcludedFromManifest(relFromData);
+		});
 
 	const entries = files.map((absPath) => {
 		// Example rel: "Accolite/1. Thirty Days.csv"

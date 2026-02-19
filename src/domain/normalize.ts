@@ -128,12 +128,19 @@ export function normalizeProblemRows(rows: readonly CsvRowRaw[]): {
 	return { items, issues };
 }
 
+const NUMBER_WORDS: Record<string, string> = {
+	One: "1",
+	Three: "3",
+	Six: "6",
+	Thirty: "30",
+};
+
 /**
  * Convert a CSV/list label into a user-facing title.
  * Examples:
- * - "1. Thirty Days" -> "Thirty Days"
- * - "2. Three Months" -> "Three Months"
- * - "4. More Than Six Months" -> "More Than Six Months"
+ * - "1. Thirty Days" -> "30 Days"
+ * - "2. Three Months" -> "3 Months"
+ * - "4. More Than Six Months" -> "More Than 6 Months"
  *
  * Invariants:
  * - Never returns empty string; falls back to trimmed input.
@@ -147,8 +154,15 @@ export function formatListLabel(raw: string): string {
 
 	return stripped
 		.split(/\s+/u)
-		.map((w) =>
-			w.toUpperCase() === w ? w : w.charAt(0).toUpperCase() + w.slice(1),
-		)
+		.map((w) => {
+			// If the word is uppercase, leave as-is
+			if (w.toUpperCase() === w) return w;
+
+			// If word matches number words, replace with digits
+			const capitalized = w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+			if (NUMBER_WORDS[capitalized]) return NUMBER_WORDS[capitalized];
+
+			return capitalized;
+		})
 		.join(" ");
 }

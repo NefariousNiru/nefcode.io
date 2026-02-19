@@ -5,9 +5,7 @@ export function NotFoundPage() {
 		<div className="container-x py-14">
 			<div className="card p-8">
 				<h1 className="text-2xl font-semibold">Page not found</h1>
-				<p className="muted mt-2">
-					This route does not exist. Use the navigation to continue.
-				</p>
+				<p className="muted mt-2">You hit a wall.</p>
 				<div className="mt-6 flex gap-3">
 					<a className="btn btn-primary" href={import.meta.env.BASE_URL}>
 						Go home

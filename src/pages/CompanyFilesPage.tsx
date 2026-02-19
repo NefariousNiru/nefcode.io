@@ -1,4 +1,5 @@
 // file: src/pages/CompanyFilesPage.tsx
+
 import { ArrowRight, FileText, Pin, PinOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -124,9 +125,7 @@ export function CompanyFilesPage() {
 				{state.kind === "loading" ? (
 					<div className="glass p-6">
 						<div className="text-base font-semibold">Loading lists...</div>
-						<div className="muted mt-2 text-sm">
-							Fetching {import.meta.env.BASE_URL}manifest.json
-						</div>
+						<div className="muted mt-2 text-sm">Fetching data</div>
 					</div>
 				) : null}
 
@@ -143,7 +142,7 @@ export function CompanyFilesPage() {
 							<div className="flex items-center justify-between">
 								<div className="text-base font-semibold">Lists</div>
 								<div className="chip px-3 py-1 text-xs">
-									{files.length} shown
+									{files.length} found
 								</div>
 							</div>
 
@@ -160,7 +159,6 @@ export function CompanyFilesPage() {
 													{formatListLabel(f.name)}
 												</div>
 											</div>
-											<div className="muted mt-1 truncate text-xs">{f.url}</div>
 										</div>
 
 										<Link

@@ -318,10 +318,31 @@
 
 @layer utilities {
 	.container-x {
-		@apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+		@apply mx-auto w-full max-w-4/5 px-4 sm:px-6 lg:px-8;
 	}
 
 	.grid-auto-fit {
 		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 	}
+}
+
+/* Compact clickable company tile */
+.company-tile {
+	border: 1px solid rgb(var(--border));
+	border-radius: 1.25rem; /* 20px-ish */
+	padding: 1rem;
+	background: rgba(var(--card), 0.55);
+	backdrop-filter: blur(10px);
+	transition:
+		transform 180ms ease,
+		box-shadow 180ms ease,
+		background-color 180ms ease,
+		border-color 180ms ease;
+}
+
+.company-tile:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 18px 55px rgba(0, 0, 0, 0.18);
+	border-color: rgba(var(--fg), 0.16);
+	background: rgba(var(--card), 0.7);
 }

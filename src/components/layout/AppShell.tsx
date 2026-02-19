@@ -1,14 +1,9 @@
 // file: src/components/layout/AppShell.tsx
 
-import { Search, Sparkles } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Rocket, Search } from "lucide-react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Footer } from "./Footer";
 
-/**
- * Background visuals:
- * - Keep it calm: 3 large soft bubbles + base surface gradients from CSS.
- * Invariant: purely decorative, must not block interaction.
- */
 function BackgroundBubbles() {
 	const bubbles = [
 		{ left: "6%", top: "12%", size: 520, delay: "0s" },
@@ -51,7 +46,7 @@ function TopNav() {
 								aria-label="Go to home"
 							>
 								<span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(99,102,241,0.16)]">
-									<Sparkles className="h-4 w-4" />
+									<Rocket className="h-4 w-4" />
 								</span>
 								<span className="font-semibold tracking-tight">NefCode.io</span>
 							</button>
@@ -68,32 +63,26 @@ function TopNav() {
 							</nav>
 						</div>
 
-						<div className="hidden w-[420px] max-w-[45vw] items-center gap-2 md:flex">
+						<div className="hidden w-[460px] max-w-[48vw] items-center gap-2 md:flex">
 							<div className="relative w-full">
 								<Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 opacity-70" />
 								<input
 									className="input pl-11"
 									placeholder="Search (stub) - companies, lists, problems..."
 									onChange={() => {
-										// Intentionally no-op for skeleton
+										// skeleton no-op
 									}}
 								/>
 							</div>
-							<a
-								className="btn btn-primary"
-								href={`${import.meta.env.BASE_URL}companies`}
-							>
+							<Link className="btn btn-primary" to="/companies">
 								Start
-							</a>
+							</Link>
 						</div>
 
 						<div className="md:hidden">
-							<a
-								className="btn btn-primary"
-								href={`${import.meta.env.BASE_URL}companies`}
-							>
+							<Link className="btn btn-primary" to="/companies">
 								Browse
-							</a>
+							</Link>
 						</div>
 					</div>
 				</div>

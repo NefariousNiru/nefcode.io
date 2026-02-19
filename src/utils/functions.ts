@@ -1,6 +1,10 @@
 // file: src/utils/functions.ts
 
-import type { ManifestCompany, ManifestFile } from "../domain/types.ts";
+import type {
+	Difficulty,
+	ManifestCompany,
+	ManifestFile,
+} from "../domain/types.ts";
 
 /**
  * Restrict pinned items to a maximum of 5.
@@ -22,4 +26,46 @@ export function pickRandomFile(
 		for (const f of c.files) flat.push({ company: c.name, file: f });
 	if (flat.length === 0) return null;
 	return flat[Math.floor(Math.random() * flat.length)] ?? null;
+}
+
+/**
+ * Execute async work over a collection with a concurrency limit.
+ *
+ * Spawns up to `limit` parallel workers that process items sequentially
+ * from the shared queue until all items are handled.
+ *
+ * @typeParam T - Item type
+ * @param items - Collection of items to process
+ * @param limit - Maximum number of concurrent workers (min 1)
+ * @param fn - Async function invoked for each item
+ *
+ * @remarks
+ * - Resolves when all items complete.
+ * - Rejects immediately if any `fn` call throws.
+ */
+export async function withConcurrency<T>(
+	items: readonly T[],
+	limit: number,
+	fn: (item: T) => Promise<void>,
+): Promise<void> {
+	const q = [...items];
+	const workers = Array.from({ length: Math.max(1, limit) }, async () => {
+		while (q.length > 0) {
+			const item = q.shift();
+			if (!item) return;
+			await fn(item);
+		}
+	});
+	await Promise.all(workers);
+}
+
+/**
+ * Chip based on difficulty
+ * @param d Difficulty d
+ */
+export function difficultyClass(d: Difficulty): string {
+	const base = "chip px-3 py-1 text-xs font-medium";
+	if (d === "EASY") return `${base} text-[rgba(34,197,94,0.95)]`;
+	if (d === "MEDIUM") return `${base} text-[rgba(245,158,11,0.95)]`;
+	return `${base} text-[rgba(239,68,68,0.95)]`;
 }
