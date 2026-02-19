@@ -1,246 +1,174 @@
 // file: src/pages/HealthCheckPage.tsx
 
-import {useEffect, useMemo, useState} from "react";
-import type {Manifest} from "../domain/types";
-import {fetchManifest} from "../data/manifest";
-import {loadCsv} from "../data/csv";
+import { CheckCircle2, Info, XCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { fetchCsvText, parseAndNormalizeCsv } from "../data/csv";
+import { fetchManifest } from "../data/manifest";
+import { useTheme } from "../theme/useTheme";
+import { pickRandomFile } from "../utils/functions.ts";
 
-type SamplePick = {
-    readonly company: string;
-    readonly fileName: string;
-    readonly url: string;
-    readonly rowsMeta?: number;
-};
+type HealthState =
+	| { readonly kind: "loading" }
+	| { readonly kind: "error"; readonly message: string }
+	| {
+			readonly kind: "ready";
+			readonly baseUrl: string;
+			readonly localStorageOk: boolean;
+			readonly companyCount: number;
+			readonly sampleCompany: string;
+			readonly sampleFileName: string;
+			readonly sampleFileUrl: string;
+			readonly sampleRows: number;
+			readonly sampleIssues: number;
+	  };
 
-type HealthDetails = {
-    readonly baseUrl: string;
-    readonly companies: number;
-    readonly files: number;
-    readonly sample: SamplePick;
-    readonly parsedRows: number;
-    readonly issuesCount: number;
-    readonly csvTextLikelyEmpty: boolean;
-};
-
-type LoadState =
-    | { readonly kind: "idle" }
-    | { readonly kind: "loading" }
-    | { readonly kind: "error"; readonly message: string }
-    | { readonly kind: "ready"; readonly details: HealthDetails };
-
-function flattenFiles(manifest: Manifest): readonly SamplePick[] {
-    const out: SamplePick[] = [];
-    for (const c of manifest.companies) {
-        for (const f of c.files) {
-            out.push({
-                company: c.name,
-                fileName: f.name,
-                url: f.url,
-                rowsMeta: f.rows,
-            });
-        }
-    }
-    return out;
-}
-
-function pickRandomSample(files: readonly SamplePick[]): SamplePick | null {
-    if (files.length === 0) return null;
-
-    const nonEmptyByMeta = files.filter((f) => (f.rowsMeta ?? 1) > 0);
-    const pool = nonEmptyByMeta.length > 0 ? nonEmptyByMeta : files;
-
-    const idx = Math.floor(Math.random() * pool.length);
-    return pool[idx] ?? null;
-}
-
-function Badge({ok, label}: { ok: boolean; label: string }) {
-    const cls = ok ? "badge badge-ok" : "badge badge-fail";
-    return (
-        <span className={cls}>
-      <span className="badge-dot"/>
-            {label}
-    </span>
-    );
+function Row({
+	label,
+	value,
+	ok,
+	hint,
+}: {
+	readonly label: string;
+	readonly value: string;
+	readonly ok: boolean;
+	readonly hint?: string;
+}) {
+	return (
+		<div className="flex items-start justify-between gap-4 rounded-2xl border border-[rgb(var(--border))] p-4">
+			<div className="min-w-0">
+				<div className="font-medium">{label}</div>
+				<div className="muted mt-1 text-sm break-words">{value}</div>
+				{hint ? (
+					<div className="muted mt-2 flex items-start gap-2 text-xs leading-5">
+						<Info className="mt-[2px] h-3.5 w-3.5" />
+						<span>{hint}</span>
+					</div>
+				) : null}
+			</div>
+			<div className="pt-1">
+				{ok ? (
+					<CheckCircle2 className="h-5 w-5 text-[rgba(34,197,94,0.95)]" />
+				) : (
+					<XCircle className="h-5 w-5 text-[rgba(239,68,68,0.95)]" />
+				)}
+			</div>
+		</div>
+	);
 }
 
 export function HealthCheckPage() {
-    const [state, setState] = useState<LoadState>({kind: "idle"});
+	const { preference, mode } = useTheme();
+	const baseUrl = import.meta.env.BASE_URL ?? "/";
 
-    useEffect(() => {
-        const ac = new AbortController();
+	const localStorageOk = useMemo(() => {
+		try {
+			localStorage.setItem("__nefcode_test__", "1");
+			localStorage.removeItem("__nefcode_test__");
+			return true;
+		} catch {
+			return false;
+		}
+	}, []);
 
-        const run = async () => {
-            setState({kind: "loading"});
-            try {
-                const baseUrl = import.meta.env.BASE_URL;
-                const manifest = await fetchManifest(ac.signal);
+	const [state, setState] = useState<HealthState>({ kind: "loading" });
 
-                const companies = manifest.companies.length;
-                const filesTotal = manifest.companies.reduce((acc, c) => acc + c.files.length, 0);
+	useEffect(() => {
+		const ac = new AbortController();
+		setState({ kind: "loading" });
 
-                const allFiles = flattenFiles(manifest);
-                const sample = pickRandomSample(allFiles);
-                if (!sample) {
-                    setState({kind: "error", message: "Manifest contains zero CSV files."});
-                    return;
-                }
+		fetchManifest(ac.signal)
+			.then(async (m) => {
+				const picked = pickRandomFile(m.companies);
+				if (!picked)
+					throw new Error("Manifest loaded but contains no CSV entries.");
 
-                const csv = await loadCsv(sample.url, ac.signal);
-                const csvTextLikelyEmpty = csv.items.length === 0 && (sample.rowsMeta ?? 1) === 0;
+				const csvText = await fetchCsvText(picked.file.url, ac.signal);
+				const parsed = parseAndNormalizeCsv(csvText);
 
-                setState({
-                    kind: "ready",
-                    details: {
-                        baseUrl,
-                        companies,
-                        files: filesTotal,
-                        sample,
-                        parsedRows: csv.items.length,
-                        issuesCount: csv.issuesCount,
-                        csvTextLikelyEmpty,
-                    },
-                });
-            } catch (e) {
-                const msg = e instanceof Error ? e.message : "Unknown error";
-                setState({kind: "error", message: msg});
-            }
-        };
+				setState({
+					kind: "ready",
+					baseUrl,
+					localStorageOk,
+					companyCount: m.companies.length,
+					sampleCompany: picked.company,
+					sampleFileName: picked.file.name,
+					sampleFileUrl: picked.file.url,
+					sampleRows: parsed.items.length,
+					sampleIssues: parsed.issuesCount,
+				});
+			})
+			.catch((e: unknown) => {
+				if (ac.signal.aborted) return;
+				const msg = e instanceof Error ? e.message : "Unknown error";
+				setState({ kind: "error", message: msg });
+			});
 
-        void run();
-        return () => ac.abort();
-    }, []);
+		return () => ac.abort();
+	}, [localStorageOk]);
 
-    const header = useMemo(() => {
-        return {
-            title: "Health check",
-            subtitle: "Manifest + CSV fetch/parse sanity checks (GitHub Pages compatible)",
-        };
-    }, []);
+	return (
+		<div className="container-x py-10">
+			<div className="flex flex-col gap-6">
+				<div>
+					<h1 className="text-3xl font-semibold tracking-tight">
+						Health check
+					</h1>
+					<p className="muted mt-1">Manifest + random CSV parse check.</p>
+				</div>
 
-    if (state.kind === "loading" || state.kind === "idle") {
-        return (
-            <div className="container">
-                <div className="stack" style={{gap: 10}}>
-                    <h1 className="h1">{header.title}</h1>
-                    <p className="p muted">{header.subtitle}</p>
+				<div className="glass p-6">
+					<div className="grid gap-4">
+						<Row
+							label="Theme preference"
+							value={preference}
+							ok={
+								preference === "light" ||
+								preference === "dark" ||
+								preference === "system"
+							}
+						/>
+						<Row
+							label="Resolved mode"
+							value={mode}
+							ok={mode === "light" || mode === "dark"}
+						/>
+						<Row
+							label="localStorage"
+							value={localStorageOk ? "available" : "blocked"}
+							ok={localStorageOk}
+						/>
+						<Row
+							label="Vite BASE_URL"
+							value={baseUrl}
+							ok={baseUrl.length > 0}
+						/>
 
-                    <section className="card sheen">
-                        <div className="card-inner">
-                            <div className="row">
-                                <Badge ok={true} label="Running"/>
-                                <span className="muted">Loading manifest and sampling a CSV...</span>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        );
-    }
+						{state.kind === "loading" ? (
+							<Row label="Manifest + CSV" value="Running..." ok={true} />
+						) : null}
 
-    if (state.kind === "error") {
-        return (
-            <div className="container">
-                <div className="stack" style={{gap: 10}}>
-                    <h1 className="h1">{header.title}</h1>
-                    <p className="p muted">{header.subtitle}</p>
+						{state.kind === "error" ? (
+							<Row label="Manifest + CSV" value={state.message} ok={false} />
+						) : null}
 
-                    <section className="card sheen">
-                        <div className="card-inner">
-                            <div className="stack" style={{gap: 10}}>
-                                <div className="row">
-                                    <Badge ok={false} label="Failed"/>
-                                </div>
-                                <p className="p" style={{whiteSpace: "pre-wrap"}}>
-                                    {state.message}
-                                </p>
-                                <p className="p muted">
-                                    BASE_URL: <code>{import.meta.env.BASE_URL}</code>
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        );
-    }
-
-    const d = state.details;
-    const okManifest = d.companies > 0 && d.files > 0;
-    const okCsv = d.parsedRows > 0 || d.csvTextLikelyEmpty;
-    const okOverall = okManifest && okCsv;
-
-    return (
-        <div className="container">
-            <div className="stack" style={{gap: 10}}>
-                <h1 className="h1">{header.title}</h1>
-                <p className="p muted">{header.subtitle}</p>
-
-                <section className="card sheen">
-                    <div className="card-inner">
-                        <div className="stack" style={{gap: 10}}>
-                            <div className="row">
-                                <Badge ok={okOverall} label={okOverall ? "Healthy" : "Degraded"}/>
-                                <span className="muted">
-                  BASE_URL: <code>{d.baseUrl}</code>
-                </span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <div className="grid-2">
-                    <section className="card sheen">
-                        <div className="card-inner">
-                            <div className="stack" style={{gap: 10}}>
-                                <div className="row" style={{justifyContent: "space-between"}}>
-                                    <h2 className="h2">Manifest</h2>
-                                    <Badge ok={okManifest} label={okManifest ? "OK" : "FAIL"}/>
-                                </div>
-                                <ul style={{margin: 0, paddingLeft: 18, lineHeight: 1.7}}>
-                                    <li>Companies: {d.companies}</li>
-                                    <li>Files: {d.files}</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="card sheen">
-                        <div className="card-inner">
-                            <div className="stack" style={{gap: 10}}>
-                                <div className="row" style={{justifyContent: "space-between"}}>
-                                    <h2 className="h2">CSV sample</h2>
-                                    <Badge ok={okCsv} label={okCsv ? "OK" : "FAIL"}/>
-                                </div>
-
-                                <ul style={{margin: 0, paddingLeft: 18, lineHeight: 1.7}}>
-                                    <li>
-                                        Sample: {d.sample.company} / {d.sample.fileName}
-                                    </li>
-                                    <li>
-                                        Sample URL: <code>{d.sample.url}</code>
-                                    </li>
-                                    <li>Manifest rows
-                                        metadata: {typeof d.sample.rowsMeta === "number" ? d.sample.rowsMeta : "n/a"}</li>
-                                    <li>Parsed rows: {d.parsedRows}</li>
-                                    <li>Parse/normalize issues: {d.issuesCount}</li>
-                                </ul>
-
-                                {d.parsedRows === 0 ? (
-                                    <p className="p muted" style={{marginTop: 6}}>
-                                        Parsed rows are 0. Likely causes: empty CSV, header mismatch, or rows dropped
-                                        due to missing
-                                        Link/Title/Difficulty.
-                                    </p>
-                                ) : null}
-
-                                <p className="p muted" style={{marginTop: 6}}>
-                                    Refresh to sample a different CSV.
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </div>
-    );
+						{state.kind === "ready" ? (
+							<>
+								<Row
+									label="manifest.json"
+									value={`${state.baseUrl}manifest.json (${state.companyCount} companies)`}
+									ok={state.companyCount > 0}
+								/>
+								<Row
+									label="Random CSV"
+									value={`${state.sampleCompany} - ${state.sampleFileName} | ${state.sampleRows} rows | ${state.sampleIssues} issues`}
+									ok={state.sampleRows > 0}
+									hint={`${state.baseUrl}${state.sampleFileUrl}`}
+								/>
+							</>
+						) : null}
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }

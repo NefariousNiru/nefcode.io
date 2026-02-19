@@ -1,7 +1,8 @@
 # 🚀 NefCode.io
 
-> 🧩 Company-wise LeetCode / DSA problem tracker
-> ⚡ Offline-first • 🗂 Zero backend • 🌍 Global completion across lists
+> ⚡ Offline-first Company-wise LeetCode / DSA problem tracker
+>
+> 
 
 ---
 
@@ -35,12 +36,12 @@
 
 **NefCode.io** is a company-wise LeetCode tracker that:
 
-✅ Loads curated company problem lists from CSV
+✅ Loads curated company problem lists
 ✅ Tracks problem completion using checkboxes
 ✅ Support for adding comments and time to problems
 ✅ Stores progress locally in browser storage
 ✅ Works fully offline after first load
-✅ Requires **no accounts, no backend, no database**
+✅ Requires **no accounts or signup**
 ---
 
 ## 🏗 Core Concepts

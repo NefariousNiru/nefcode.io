@@ -1,51 +1,54 @@
 // file: src/theme/ThemeProvider.tsx
 
-import {useEffect, useMemo, useState} from "react";
+import type * as React from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-    applyThemeMode,
-    readThemePreference,
-    resolveThemeMode,
-    writeThemePreference,
-    type ThemePreference,
+	applyThemeMode,
+	readThemePreference,
+	resolveThemeMode,
+	type ThemePreference,
+	writeThemePreference,
 } from "./theme";
-import {ThemeContext, type ThemeContextValue} from "./useTheme";
-import * as React from "react";
-
+import { ThemeContext, type ThemeContextValue } from "./useTheme";
 
 type Props = {
-    readonly children: React.ReactNode;
+	readonly children: React.ReactNode;
 };
 
-export function ThemeProvider({children}: Props) {
-    const [preference, setPreferenceState] = useState<ThemePreference>(() => readThemePreference());
-    const mode = useMemo(() => resolveThemeMode(preference), [preference]);
+export function ThemeProvider({ children }: Props) {
+	const [preference, setPreferenceState] = useState<ThemePreference>(() =>
+		readThemePreference(),
+	);
+	const mode = useMemo(() => resolveThemeMode(preference), [preference]);
 
-    useEffect(() => {
-        applyThemeMode(mode);
-    }, [mode]);
+	useEffect(() => {
+		applyThemeMode(mode);
+	}, [mode]);
 
-    useEffect(() => {
-        // If user chose system, track system changes live
-        if (preference !== "system") return;
+	useEffect(() => {
+		// If user chose system, track system changes live
+		if (preference !== "system") return;
 
-        const mql = window.matchMedia("(prefers-color-scheme: dark)");
-        const onChange = () => applyThemeMode(mql.matches ? "dark" : "light");
+		const mql = window.matchMedia("(prefers-color-scheme: dark)");
+		const onChange = () => applyThemeMode(mql.matches ? "dark" : "light");
 
-        // Apply once on subscribe
-        onChange();
+		// Apply once on subscribe
+		onChange();
 
-        mql.addEventListener("change", onChange);
-        return () => {
-            mql.removeEventListener("change", onChange);
-        };
-    }, [preference]);
+		mql.addEventListener("change", onChange);
+		return () => {
+			mql.removeEventListener("change", onChange);
+		};
+	}, [preference]);
 
-    const setPreference = (pref: ThemePreference) => {
-        writeThemePreference(pref);
-        setPreferenceState(pref);
-    };
+	const setPreference = (pref: ThemePreference) => {
+		writeThemePreference(pref);
+		setPreferenceState(pref);
+	};
 
-    const value: ThemeContextValue = {preference, mode, setPreference};
+	const value: ThemeContextValue = { preference, mode, setPreference };
 
-    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+	return (
+		<ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+	);
 }
