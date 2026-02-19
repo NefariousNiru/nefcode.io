@@ -241,8 +241,8 @@ export function LandingPage() {
 						</h1>
 
 						<p className="muted mt-4 text-base leading-7 sm:text-lg">
-							NefCode.io is a company-based focussed LeetCode© problem tracker built for
-							targeted preparation and offline use.
+							NefCode.io is a company-based focussed LeetCode© problem tracker
+							built for targeted preparation and offline use.
 						</p>
 
 						<div className="mt-7 flex flex-col gap-3 sm:flex-row">
