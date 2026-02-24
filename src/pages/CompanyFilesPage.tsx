@@ -6,7 +6,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { fetchManifest } from "../data/manifest";
 import { formatListLabel } from "../domain/normalize";
 import type { ManifestCompany, ManifestFile } from "../domain/types";
-import { usePinnedCompanies } from "../storage/usePinnedCompanies.ts";
+import { usePinnedCompanies } from "../hooks/usePinnedCompanies.ts";
 import { clampPins } from "../utils/functions.ts";
 
 type LoadStateCompany =

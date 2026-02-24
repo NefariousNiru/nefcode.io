@@ -1,7 +1,7 @@
-// file: src/storage/usePinnedCompanies.ts
+// file: src/hooks/usePinnedCompanies.ts
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { readPrefs, writePinnedCompanies } from "./prefs";
+import { readPrefs, writePinnedCompanies } from "../storage/prefs.ts";
 
 export type UsePinnedCompanies = {
 	readonly pinned: readonly string[];

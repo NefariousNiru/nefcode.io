@@ -1,6 +1,7 @@
-// file: src/stats/companyCache.ts
+// file: src/storage/companyCache.ts
 
-import { type CompanyCacheRow, db } from "../storage/db";
+import { type CompanyCacheRow, db } from "./db";
+import { getProgressVersion } from "./meta";
 
 export type CachedCompanyStats = {
 	readonly easy: { readonly solved: number; readonly total: number };
@@ -14,8 +15,8 @@ function makeKey(manifestAt: string, company: string): string {
 }
 
 /**
- * Read cached company stats for a given manifest version + company.
- * Returns null if missing.
+ * Read cached company stats for (manifestAt, company).
+ * Returns null when missing or stale vs current progressVersion.
  */
 export async function readCompanyCache(
 	manifestAt: string,
@@ -24,6 +25,9 @@ export async function readCompanyCache(
 	const key = makeKey(manifestAt, company);
 	const row = await db.companyCache.get(key);
 	if (!row) return null;
+
+	const currentVersion = await getProgressVersion();
+	if (row.progressVersion !== currentVersion) return null;
 
 	return {
 		easy: { solved: row.solvedEasy, total: row.totalEasy },
@@ -34,7 +38,7 @@ export async function readCompanyCache(
 }
 
 /**
- * Persist computed company stats in cache for this manifest version.
+ * Persist computed company stats for the current progressVersion.
  */
 export async function writeCompanyCache(args: {
 	readonly manifestAt: string;
@@ -43,6 +47,7 @@ export async function writeCompanyCache(args: {
 }): Promise<void> {
 	const { manifestAt, company, stats } = args;
 
+	const progressVersion = await getProgressVersion();
 	const row: CompanyCacheRow = {
 		key: makeKey(manifestAt, company),
 		manifestAt,
@@ -58,6 +63,7 @@ export async function writeCompanyCache(args: {
 		solvedHard: stats.hard.solved,
 		solvedAll: stats.total.solved,
 
+		progressVersion,
 		computedAt: Date.now(),
 	};
 

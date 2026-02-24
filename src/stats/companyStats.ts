@@ -1,27 +1,18 @@
 // file: src/stats/companyStats.ts
 
-import { loadCsv } from "../data/csv.ts";
-import { db } from "../storage/db.ts";
-import { withConcurrency } from "../utils/functions.ts";
-import type { Difficulty, ManifestCompany } from "./types.ts";
+import { loadCsv } from "../data/csv";
+import type { Difficulty, ManifestCompany } from "../domain/types";
+import {
+	type CachedCompanyStats,
+	readCompanyCache,
+	writeCompanyCache,
+} from "../storage/companyCache";
+import { db } from "../storage/db";
+import { withConcurrency } from "../utils/functions";
 
-export type DifficultyCounts = {
-	readonly solved: number;
-	readonly total: number;
-};
-
-export type CompanyStats = {
-	readonly easy: DifficultyCounts;
-	readonly medium: DifficultyCounts;
-	readonly hard: DifficultyCounts;
-	readonly total: DifficultyCounts;
+export type CompanyStats = CachedCompanyStats & {
 	/** True if any solved in this company across all difficulties. */
 	readonly anySolved: boolean;
-};
-
-export type LandingGlobalStats = {
-	readonly solved: number;
-	readonly total: number;
 };
 
 function emptyCompanyStats(): CompanyStats {
@@ -39,21 +30,33 @@ function inc(map: Map<string, Difficulty>, link: string, d: Difficulty) {
 }
 
 /**
- * Compute per-company totals and solved counts by difficulty.
+ * getCompanyStats
+ * Cached-only company stats.
  *
- * totals:
- * - derived from CSV parse for this company only (unique links per difficulty).
+ * Behavior:
+ * - Always attempts cache first (keyed by manifestAt + company.name).
+ * - Cache is automatically invalidated by progressVersion (enforced in storage/companyCache).
+ * - On cache miss, computes from CSV + progress table, writes cache, returns.
  *
- * solved:
- * - derived from Dexie progress where completed=true and link is in company set.
- * - difficulty bucket is taken from the company CSV (linkToDiff), not db snapshot.
+ * Invariants:
+ * - totals count unique links across the company CSVs (deduped by link).
+ * - solved counts completed=true rows in progress for those links.
+ * - difficulty buckets come from the company CSV, not the progress snapshot.
  */
-export async function computeCompanyStats(args: {
+export async function getCompanyStats(args: {
+	readonly manifestAt: string;
 	readonly company: ManifestCompany;
 	readonly signal: AbortSignal;
 }): Promise<CompanyStats> {
-	const { company, signal } = args;
+	const { manifestAt, company, signal } = args;
 
+	// 1) Cache read (already validated vs current progressVersion)
+	const cached = await readCompanyCache(manifestAt, company.name);
+	if (cached) {
+		return { ...cached, anySolved: cached.total.solved > 0 };
+	}
+
+	// 2) Compute (CSV -> linkToDiff, totals; progress -> solved counts)
 	const linkToDiff = new Map<string, Difficulty>();
 
 	await withConcurrency(company.files, 3, async (f) => {
@@ -79,17 +82,26 @@ export async function computeCompanyStats(args: {
 		MEDIUM: 0,
 		HARD: 0,
 	};
+
 	for (const r of solvedRows) {
 		const d = linkToDiff.get(r.link);
 		if (!d) continue;
 		solvedByDiff[d] += 1;
 	}
 
-	return {
+	const computed: CachedCompanyStats = {
 		easy: { solved: solvedByDiff.EASY, total: totals.EASY },
 		medium: { solved: solvedByDiff.MEDIUM, total: totals.MEDIUM },
 		hard: { solved: solvedByDiff.HARD, total: totals.HARD },
 		total: { solved: solvedRows.length, total: links.length },
-		anySolved: solvedRows.length > 0,
 	};
+
+	// 3) Write cache (stored with current progressVersion inside writeCompanyCache)
+	await writeCompanyCache({
+		manifestAt,
+		company: company.name,
+		stats: computed,
+	});
+
+	return { ...computed, anySolved: computed.total.solved > 0 };
 }

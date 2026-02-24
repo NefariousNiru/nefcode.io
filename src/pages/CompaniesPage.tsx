@@ -5,8 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchManifest } from "../data/manifest";
 import type { ManifestCompany } from "../domain/types";
-import { useCompanyStatsLazy } from "../domain/useCompanyStatsLazy";
-import { usePinnedCompanies } from "../storage/usePinnedCompanies.ts";
+import { useCompanyStatsLazy } from "../hooks/useCompanyStatsLazy.ts";
+import { usePinnedCompanies } from "../hooks/usePinnedCompanies.ts";
 import { clampPins } from "../utils/functions.ts";
 
 type LoadStateCompanies =

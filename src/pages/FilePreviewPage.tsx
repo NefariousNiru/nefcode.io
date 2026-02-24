@@ -18,9 +18,9 @@ import { loadCsv } from "../data/csv";
 import { loadVideoSolutionIndex } from "../data/videoSolutions";
 import { formatListLabel } from "../domain/normalize";
 import type { Difficulty, ProblemRow } from "../domain/types";
+import { useProgressMap } from "../hooks/useProgressMap.ts";
 import { upsertRecentFile } from "../storage/prefs";
 import { toggleCompleted } from "../storage/progress";
-import { useProgressMap } from "../storage/useProgressMap";
 import { difficultyClass } from "../utils/functions";
 
 type LoadState =

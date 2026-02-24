@@ -2,6 +2,7 @@
 
 import type { Difficulty } from "../domain/types.ts";
 import { db, type ProblemProgress } from "./db";
+import { bumpProgressVersion } from "./meta";
 
 /**
  * Read progress for a single link. Returns null if none exists.
@@ -35,6 +36,9 @@ export async function getProgressMap(
 /**
  * Toggle global completion for a link.
  * Creates a row if missing.
+ *
+ * Side-effect:
+ * - bumps progressVersion so any solved-based caches get invalidated.
  */
 export async function toggleCompleted(
 	link: string,
@@ -43,28 +47,35 @@ export async function toggleCompleted(
 	const existing = await db.progress.get(link);
 	const now = Date.now();
 
-	if (!existing) {
-		await db.progress.put({
-			link: link,
-			completed: true,
-			minutes: null,
-			notes: null,
-			updatedAt: now,
-			difficulty: difficulty,
-		});
-		return;
-	}
+	await db.transaction("rw", db.progress, db.meta, async () => {
+		if (!existing) {
+			await db.progress.put({
+				link,
+				completed: true,
+				minutes: null,
+				notes: null,
+				updatedAt: now,
+				difficulty,
+			});
+		} else {
+			await db.progress.put({
+				...existing,
+				completed: !existing.completed,
+				updatedAt: now,
+			});
+		}
 
-	await db.progress.put({
-		...existing,
-		completed: !existing.completed,
-		updatedAt: now,
+		await bumpProgressVersion();
 	});
 }
 
 /**
  * Set minutes (global) for a link.
  * Creates a row if missing.
+ *
+ * Note:
+ * - minutes does not affect solved counts, but keeping invalidation simple is fine.
+ * - if you want to avoid extra recomputes, you can skip bumping here.
  */
 export async function setMinutes(
 	link: string,
@@ -74,19 +85,22 @@ export async function setMinutes(
 	const existing = await db.progress.get(link);
 	const now = Date.now();
 
-	if (!existing) {
-		await db.progress.put({
-			link: link,
-			completed: false,
-			minutes: minutes,
-			notes: null,
-			updatedAt: now,
-			difficulty: difficulty,
-		});
-		return;
-	}
+	await db.transaction("rw", db.progress, db.meta, async () => {
+		if (!existing) {
+			await db.progress.put({
+				link,
+				completed: false,
+				minutes,
+				notes: null,
+				updatedAt: now,
+				difficulty,
+			});
+		} else {
+			await db.progress.put({ ...existing, minutes, updatedAt: now });
+		}
 
-	await db.progress.put({ ...existing, minutes, updatedAt: now });
+		await bumpProgressVersion();
+	});
 }
 
 /**
@@ -101,17 +115,20 @@ export async function setNotes(
 	const existing = await db.progress.get(link);
 	const now = Date.now();
 
-	if (!existing) {
-		await db.progress.put({
-			link: link,
-			completed: false,
-			minutes: null,
-			notes: notes,
-			updatedAt: now,
-			difficulty: difficulty,
-		});
-		return;
-	}
+	await db.transaction("rw", db.progress, db.meta, async () => {
+		if (!existing) {
+			await db.progress.put({
+				link,
+				completed: false,
+				minutes: null,
+				notes,
+				updatedAt: now,
+				difficulty,
+			});
+		} else {
+			await db.progress.put({ ...existing, notes, updatedAt: now });
+		}
 
-	await db.progress.put({ ...existing, notes, updatedAt: now });
+		await bumpProgressVersion();
+	});
 }
