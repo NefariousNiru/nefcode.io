@@ -158,9 +158,7 @@ export function GlobalSearch(props: {
 
 						{grouped.problems.length > 0 ? (
 							<div className="mt-3">
-								<div className="muted px-2 text-xs">
-									Problems (opens link)
-								</div>
+								<div className="muted px-2 text-xs">Problems (opens link)</div>
 								<div className="mt-2 space-y-1">
 									{grouped.problems.map((r) => {
 										if (r.kind !== "problem") return null;

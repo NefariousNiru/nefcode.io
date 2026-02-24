@@ -1,5 +1,6 @@
 // file: src/pages/StatsPage.tsx
 
+import { Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { BarChart } from "../components/charts/BarChart";
 import { NerdStatsPanel } from "../components/charts/NerdStatsPanel";
@@ -164,6 +165,41 @@ export function StatsPage() {
 		return m;
 	}, [progressMinutes]);
 
+	const clearDB = async () => {
+		const ok = window.confirm(
+			"Reset local stats?\n\nThis will clear:\n- progress\n- meta\n- companyCache\n- listStatsCache\n- pinnedLandingCache\n- companyFileQuickCache\n\nThis cannot be undone.",
+		);
+		if (!ok) return;
+
+		try {
+			await db.transaction(
+				"rw",
+				[
+					db.progress,
+					db.meta,
+					db.companyCache,
+					db.listStatsCache,
+					db.pinnedLandingCache,
+					db.companyFileQuickCache,
+				],
+				async () => {
+					await db.progress.clear();
+					await db.meta.clear();
+					await db.companyCache.clear();
+					await db.listStatsCache.clear();
+					await db.pinnedLandingCache.clear();
+					await db.companyFileQuickCache.clear();
+				},
+			);
+
+			setProgressRows([]);
+			setTopCompanies([]);
+			setReadyCompanies([]);
+		} catch {
+			window.alert("Reset failed. Try again.");
+		}
+	};
+
 	return (
 		<div className="container-x py-10">
 			<div className="flex flex-col gap-6">
@@ -228,6 +264,29 @@ export function StatsPage() {
 							progressRows={progressRows}
 							progressMinutes={progressMinutes}
 						/>
+
+						<div className="mt-4 glass p-6">
+							<div className="flex items-start justify-between gap-3">
+								<div>
+									<div className="text-base font-semibold">Reset Stats</div>
+									<div className="muted mt-1 text-xs leading-5">
+										Clears your local progress and cached stats for this app on
+										this browser. This cannot be undone.
+									</div>
+								</div>
+
+								<button
+									type="button"
+									className="btn bg-red-100 text-[rgba(244,63,94,0.95)] "
+									onClick={clearDB}
+									aria-label="Reset local stats"
+									title="Clears local progress + caches"
+								>
+									<Trash2 className="h-4 w-4" />
+									<span>Reset</span>
+								</button>
+							</div>
+						</div>
 					</>
 				) : null}
 			</div>

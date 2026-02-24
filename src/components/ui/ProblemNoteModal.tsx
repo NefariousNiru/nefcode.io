@@ -135,12 +135,12 @@ export function ProblemNoteModal(props: Props) {
 						</button>
 					</div>
 
-					<div className="mt-5 grid gap-4 md:grid-cols-[220px_1fr]">
+					<div className="mt-5 grid gap-4">
 						<label htmlFor="minutes" className="muted text-xs">
 							Minutes
 						</label>
 						<input
-							className="input mt-2"
+							className="input"
 							inputMode="numeric"
 							placeholder="e.g. 25"
 							value={minutesText}
@@ -152,7 +152,7 @@ export function ProblemNoteModal(props: Props) {
 							Notes
 						</label>
 						<textarea
-							className="input mt-2 min-h-[140px] resize-y"
+							className="input resize-y rounded-2xl min-h-8"
 							placeholder="Key idea, pitfalls, pattern, edge cases..."
 							value={notesText}
 							onChange={(e) => setNotesText(e.target.value)}
