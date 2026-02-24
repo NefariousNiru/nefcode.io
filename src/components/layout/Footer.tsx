@@ -105,7 +105,7 @@ export function Footer() {
 								rel="noreferrer"
 							>
 								<Youtube className="h-4 w-4" />
-								<span>NeetCode</span>
+								<span>Learn Here: NeetCode</span>
 							</a>
 						</div>
 

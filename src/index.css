@@ -539,3 +539,164 @@
 .qs-pill-muted {
 	color: rgb(var(--muted));
 }
+
+/* --- Efficiency widget --- */
+.eff-row {
+	border-radius: var(--r-xl);
+	border: 1px solid rgb(var(--border));
+	padding: 1rem;
+	transition:
+		transform 120ms ease,
+		box-shadow 120ms ease,
+		border-color 120ms ease,
+		background-color 120ms ease;
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.dark .eff-row {
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* the small pill for EASY/MED/HARD */
+.eff-chip {
+	border-radius: 9999px;
+	border: 1px solid rgba(var(--fg), 0.08);
+	padding: 0.125rem 0.625rem;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+}
+
+/* P95 badge */
+.eff-p95 {
+	border-radius: 0.5rem;
+	padding: 0.125rem 0.5rem;
+	font-size: 11px;
+	font-weight: 600;
+	background: rgba(148, 163, 184, 0.18);
+	color: rgb(var(--muted));
+}
+
+.dark .eff-p95 {
+	background: rgba(30, 41, 59, 0.65);
+	color: rgb(var(--muted));
+}
+
+/* Stat boxes inside the row */
+.eff-stat {
+	border-radius: 0.75rem;
+	border: 1px solid rgba(15, 23, 42, 0.04);
+	background: rgba(255, 255, 255, 0.45);
+	padding: 0.5rem;
+	text-align: center;
+}
+
+.dark .eff-stat {
+	border-color: rgba(255, 255, 255, 0.06);
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.eff-stat-label {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgb(var(--muted-2));
+}
+
+.eff-stat-value {
+	margin-top: 2px;
+	font-size: 12px;
+	font-weight: 800;
+	color: rgb(var(--fg));
+}
+
+/* --- Difficulty themes (LIGHT) --- */
+.eff-easy {
+	border-color: rgba(16, 185, 129, 0.22);
+	background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), #ffffff);
+}
+
+.eff-medium {
+	border-color: rgba(245, 158, 11, 0.22);
+	background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), #ffffff);
+}
+
+.eff-hard {
+	border-color: rgba(244, 63, 94, 0.22);
+	background: linear-gradient(135deg, rgba(244, 63, 94, 0.12), #ffffff);
+}
+
+.eff-easy .eff-chip {
+	border-color: rgba(16, 185, 129, 0.18);
+	background: rgba(16, 185, 129, 0.1);
+	color: rgb(5 150 105);
+}
+
+.eff-medium .eff-chip {
+	border-color: rgba(245, 158, 11, 0.18);
+	background: rgba(245, 158, 11, 0.1);
+	color: rgb(217 119 6);
+}
+
+.eff-hard .eff-chip {
+	border-color: rgba(244, 63, 94, 0.18);
+	background: rgba(244, 63, 94, 0.1);
+	color: rgb(225 29 72);
+}
+
+/* --- Difficulty themes (DARK) --- */
+.dark .eff-easy {
+	border-color: rgba(16, 185, 129, 0.26);
+	background: linear-gradient(
+		135deg,
+		rgba(16, 185, 129, 0.1),
+		rgba(15, 23, 42, 0.6)
+	);
+}
+
+.dark .eff-medium {
+	border-color: rgba(245, 158, 11, 0.26);
+	background: linear-gradient(
+		135deg,
+		rgba(245, 158, 11, 0.1),
+		rgba(15, 23, 42, 0.6)
+	);
+}
+
+.dark .eff-hard {
+	border-color: rgba(244, 63, 94, 0.26);
+	background: linear-gradient(
+		135deg,
+		rgba(244, 63, 94, 0.1),
+		rgba(15, 23, 42, 0.6)
+	);
+}
+
+.dark .eff-easy .eff-chip {
+	color: rgb(110 231 183);
+}
+
+.dark .eff-medium .eff-chip {
+	color: rgb(253 230 138);
+}
+
+.dark .eff-hard .eff-chip {
+	color: rgb(251 113 133);
+}
+
+/* Efficiency row text helpers - token driven */
+.eff-meta {
+	font-size: 11px;
+	color: rgb(var(--muted));
+}
+
+.eff-meta-strong {
+	font-weight: 600;
+	color: rgb(var(--fg));
+}
+
+.eff-p95-strong {
+	font-weight: 800;
+	color: rgb(var(--fg));
+}

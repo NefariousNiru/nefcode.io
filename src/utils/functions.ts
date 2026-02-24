@@ -69,3 +69,53 @@ export function difficultyClass(d: Difficulty): string {
 	if (d === "MEDIUM") return `${base} text-[rgba(245,158,11,0.95)]`;
 	return `${base} text-[rgba(239,68,68,0.95)]`;
 }
+
+/**
+ * Get title of problem from LC link
+ * @param link A leetcode url
+ */
+export function prettyProblemLabel(link: string): string {
+	try {
+		const u = new URL(link);
+		const parts = u.pathname.split("/").filter(Boolean);
+
+		// Expect: ["problems", "<slug>"]
+		const problemsIdx = parts.indexOf("problems");
+		const slug =
+			problemsIdx >= 0 && parts.length > problemsIdx + 1
+				? parts[problemsIdx + 1]
+				: (parts[0] ?? "");
+
+		const cleaned = slug.replace(/[-_]+/g, " ").trim();
+		if (!cleaned) {
+			const s = u.toString();
+			return s.length > 36 ? `${s.slice(0, 36)}…` : s;
+		}
+
+		// Title Case words (keep short words lowercased except first)
+		const lowerWords = new Set([
+			"a",
+			"an",
+			"the",
+			"and",
+			"or",
+			"of",
+			"to",
+			"in",
+			"on",
+			"for",
+			"with",
+		]);
+		const words = cleaned.split(/\s+/u);
+		return words
+			.map((w, i) => {
+				const lw = w.toLowerCase();
+				if (i !== 0 && lowerWords.has(lw)) return lw;
+				return lw.charAt(0).toUpperCase() + lw.slice(1);
+			})
+			.join(" ");
+	} catch {
+		const s = link.replace(/^https?:\/\//, "");
+		return s.length > 36 ? `${s.slice(0, 36)}…` : s;
+	}
+}

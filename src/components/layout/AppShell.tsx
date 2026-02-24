@@ -60,6 +60,14 @@ function TopNav() {
 								>
 									Companies
 								</NavLink>
+								<NavLink
+									to="/stats"
+									className={({ isActive }) =>
+										`btn btn-ghost ${isActive ? "underline" : ""}`
+									}
+								>
+									Stats
+								</NavLink>
 							</nav>
 						</div>
 

@@ -340,40 +340,42 @@ export function CompanyFilesPage() {
 							</div>
 
 							<div className="mt-3 space-y-2">
-                                {files.slice(0, 8).map((f) => {
-                                    const st = fileStats.get(f.url);
-                                    const solved = st?.solved ?? 0;
-                                    const total = st?.total ?? 0;
+								{files.slice(0, 8).map((f) => {
+									const st = fileStats.get(f.url);
+									const solved = st?.solved ?? 0;
+									const total = st?.total ?? 0;
 
-                                    const pctRaw = total > 0 ? (solved / total) * 100 : 0;
-                                    const pct = solved > 0 && total > 0 ? Math.max(pctRaw, 2) : 0;
+									const pctRaw = total > 0 ? (solved / total) * 100 : 0;
+									const pct = solved > 0 && total > 0 ? Math.max(pctRaw, 2) : 0;
 
-                                    return (
-                                        <div key={f.url} className="qs-row">
-                                            {/* Row 1: title left, x/y pill right */}
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="truncate text-sm font-medium">
-                                                        {formatListLabel(f.name)}
-                                                    </div>
-                                                </div>
+									return (
+										<div key={f.url} className="qs-row">
+											{/* Row 1: title left, x/y pill right */}
+											<div className="flex items-start justify-between gap-3">
+												<div className="min-w-0 flex-1">
+													<div className="truncate text-sm font-medium">
+														{formatListLabel(f.name)}
+													</div>
+												</div>
 
-                                                <div className="qs-pill shrink-0">
-                                                    {st ? (
-                                                        <span className="font-semibold">{solved}/{total}</span>
-                                                    ) : (
-                                                        <span className="qs-pill-muted">…</span>
-                                                    )}
-                                                </div>
-                                            </div>
+												<div className="qs-pill shrink-0">
+													{st ? (
+														<span className="font-semibold">
+															{solved}/{total}
+														</span>
+													) : (
+														<span className="qs-pill-muted">…</span>
+													)}
+												</div>
+											</div>
 
-                                            {/* Row 2: progress bar full width */}
-                                            <div className="qs-bar w-full">
-                                                <div style={{ width: `${pct}%` }} />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+											{/* Row 2: progress bar full width */}
+											<div className="qs-bar w-full">
+												<div style={{ width: `${pct}%` }} />
+											</div>
+										</div>
+									);
+								})}
 
 								{files.length > 8 ? (
 									<div className="muted text-xs">

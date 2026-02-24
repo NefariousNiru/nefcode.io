@@ -8,6 +8,7 @@ import { FilePreviewPage } from "../pages/FilePreviewPage";
 import { HealthCheckPage } from "../pages/HealthCheckPage";
 import { LandingPage } from "../pages/LandingPage";
 import { NotFoundPage } from "../pages/NotFoundPage.tsx";
+import { StatsPage } from "../pages/StatsPage.tsx";
 
 export function AppRoutes() {
 	return (
@@ -15,6 +16,7 @@ export function AppRoutes() {
 			<Route element={<AppShell />}>
 				<Route path="/" element={<LandingPage />} />
 				<Route path="/companies" element={<CompaniesPage />} />
+				<Route path="/stats" element={<StatsPage />} />
 				<Route path="/companies/:company" element={<CompanyFilesPage />} />
 				<Route path="/preview" element={<FilePreviewPage />} />
 				<Route path="/health" element={<HealthCheckPage />} />
