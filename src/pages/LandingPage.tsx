@@ -171,7 +171,7 @@ export function LandingPage() {
 		fetchManifest(ac.signal)
 			.then((m) => {
 				if (ac.signal.aborted) return;
-				setManifestAt(m.generatedAt || ""); // stable-ish key
+				setManifestAt(m.generatedAt || "dev");
 				const pinnedCompanies = m.companies.filter((c) =>
 					pinned.includes(c.name),
 				);
@@ -179,6 +179,7 @@ export function LandingPage() {
 			})
 			.catch(() => {
 				if (ac.signal.aborted) return;
+				setManifestAt("dev");
 				setPinnedCompaniesFromManifest([]);
 			});
 
