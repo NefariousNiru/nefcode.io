@@ -5,14 +5,14 @@ import type * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchManifest } from "../data/manifest.ts";
-import {
-	type CompanyLandingStats,
-	computeListSolvedTotal,
-	computePinnedCompanyStats,
-	type SolvedTotal,
-} from "../domain/landingStats";
 import { formatListLabel } from "../domain/normalize";
 import type { ManifestCompany } from "../domain/types.ts";
+import {
+	type CompanyLandingStats,
+	getListSolvedTotal,
+	getPinnedCompanyStats,
+	type SolvedTotal,
+} from "../stats/landingStats";
 import { type RecentFile, readPrefs } from "../storage/prefs";
 
 const DOT_COLORS = [
@@ -99,14 +99,18 @@ function listChipTone(idx: number | null): string {
 type RecentStats = SolvedTotal;
 
 async function computeRecentStats(
+	manifestAt: string,
 	recents: readonly RecentFile[],
 	signal: AbortSignal,
 ): Promise<Map<string, RecentStats>> {
 	const out = new Map<string, RecentStats>();
 
 	const tasks = recents.map(async (r) => {
-		// Uses Dexie (real solved) + parses list for totals
-		const stats = await computeListSolvedTotal(r.url, signal);
+		const stats = await getListSolvedTotal({
+			manifestAt,
+			listUrl: r.url,
+			signal,
+		});
 		out.set(r.url, stats);
 	});
 
@@ -115,6 +119,7 @@ async function computeRecentStats(
 }
 
 export function LandingPage() {
+	const [manifestAt, setManifestAt] = useState<string>("");
 	const [prefs] = useState(() => readPrefs());
 
 	const [recentStats, setRecentStats] = useState<Map<string, RecentStats>>(
@@ -138,13 +143,15 @@ export function LandingPage() {
 	);
 
 	useEffect(() => {
+		if (!manifestAt) return;
+
 		if (recents.length === 0) {
 			setRecentStats(new Map());
 			return;
 		}
 
 		const ac = new AbortController();
-		computeRecentStats(recents, ac.signal)
+		computeRecentStats(manifestAt, recents, ac.signal)
 			.then((m) => {
 				if (ac.signal.aborted) return;
 				setRecentStats(m);
@@ -155,7 +162,7 @@ export function LandingPage() {
 			});
 
 		return () => ac.abort();
-	}, [recents]);
+	}, [manifestAt, recents]);
 
 	useEffect(() => {
 		const ac = new AbortController();
@@ -164,6 +171,7 @@ export function LandingPage() {
 		fetchManifest(ac.signal)
 			.then((m) => {
 				if (ac.signal.aborted) return;
+				setManifestAt(m.generatedAt || "dev");
 				const pinnedCompanies = m.companies.filter((c) =>
 					pinned.includes(c.name),
 				);
@@ -171,6 +179,7 @@ export function LandingPage() {
 			})
 			.catch(() => {
 				if (ac.signal.aborted) return;
+				setManifestAt("dev");
 				setPinnedCompaniesFromManifest([]);
 			});
 
@@ -178,7 +187,8 @@ export function LandingPage() {
 	}, [pinned]);
 
 	useEffect(() => {
-		// Compute pinned company + per-list stats (max 5 companies)
+		if (!manifestAt) return;
+
 		if (pinnedCompaniesFromManifest.length === 0) {
 			setPinnedStats(new Map());
 			return;
@@ -188,17 +198,16 @@ export function LandingPage() {
 		setPinnedStats(new Map());
 
 		const run = async () => {
-			const next = new Map<string, CompanyLandingStats>();
-
-			// small and safe: pinned <= 5
 			for (const c of pinnedCompaniesFromManifest) {
 				if (ac.signal.aborted) return;
 
 				try {
-					const s = await computePinnedCompanyStats(c, ac.signal);
-					next.set(c.name, s);
+					const s = await getPinnedCompanyStats({
+						manifestAt,
+						company: c,
+						signal: ac.signal,
+					});
 
-					// incremental paint
 					setPinnedStats((prev) => {
 						const merged = new Map(prev);
 						merged.set(c.name, s);
@@ -212,7 +221,7 @@ export function LandingPage() {
 
 		void run();
 		return () => ac.abort();
-	}, [pinnedCompaniesFromManifest]);
+	}, [manifestAt, pinnedCompaniesFromManifest]);
 
 	const pinnedLinks = useMemo(
 		() =>
@@ -241,8 +250,8 @@ export function LandingPage() {
 						</h1>
 
 						<p className="muted mt-4 text-base leading-7 sm:text-lg">
-							NefCode.io is a company-based focussed LeetCode© problem tracker built for
-							targeted preparation and offline use.
+							NefCode.io is a company-based focussed LeetCode© problem tracker
+							built for targeted preparation and offline use.
 						</p>
 
 						<div className="mt-7 flex flex-col gap-3 sm:flex-row">

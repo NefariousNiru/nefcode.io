@@ -1,15 +1,26 @@
 // file: src/pages/FilePreviewPage.tsx
 
-import { ExternalLink, Eye, EyeOff, Search, Video } from "lucide-react";
+import {
+	ExternalLink,
+	Eye,
+	EyeOff,
+	MessageSquarePlus,
+	MessageSquareText,
+	MinusCircle,
+	Search,
+	Video,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { ProblemNoteModal } from "../components/ui/ProblemNoteModal.tsx";
 import { loadCsv } from "../data/csv";
 import { loadVideoSolutionIndex } from "../data/videoSolutions";
 import { formatListLabel } from "../domain/normalize";
 import type { Difficulty, ProblemRow } from "../domain/types";
+import { useProblemNoteModal } from "../hooks/useProblemNoteModal.ts";
+import { useProgressMap } from "../hooks/useProgressMap.ts";
 import { upsertRecentFile } from "../storage/prefs";
 import { toggleCompleted } from "../storage/progress";
-import { useProgressMap } from "../storage/useProgressMap";
 import { difficultyClass } from "../utils/functions";
 
 type LoadState =
@@ -48,6 +59,7 @@ function rowDoneClass(done: boolean): string {
 
 export function FilePreviewPage() {
 	const [sp] = useSearchParams();
+	const noteModal = useProblemNoteModal();
 
 	const company = sp.get("company")
 		? decodeURIComponent(sp.get("company") as string)
@@ -234,16 +246,17 @@ export function FilePreviewPage() {
 							<div className="border-b border-[rgb(var(--border))] p-4">
 								{/* md+: two halves (50/50). Right half is 5 columns. */}
 								<div className="hidden md:grid md:grid-cols-2 md:items-center md:gap-6">
-									<div className="grid grid-cols-[112px_1fr] items-center gap-4">
+									<div className="grid grid-cols-6 items-center gap-4">
 										<div className="muted text-xs font-medium">Difficulty</div>
 										<div className="muted text-xs font-medium">Title</div>
 									</div>
 
-									<div className="grid grid-cols-5 items-center gap-3">
+									<div className="grid grid-cols-6 items-center justify-items-center gap-3">
 										<div className="muted text-xs font-medium">Acceptance</div>
 										<div className="muted text-xs font-medium">Frequency</div>
 										<div className="muted text-xs font-medium">Problem</div>
 										<div className="muted text-xs font-medium">Video</div>
+										<div className="muted text-xs font-medium">Notes</div>
 										<div className="muted text-xs font-medium text-right">
 											Done
 										</div>
@@ -254,7 +267,7 @@ export function FilePreviewPage() {
 								<div className="grid grid-cols-1 gap-2 md:hidden">
 									<div className="muted text-xs font-medium">Problems</div>
 									<div className="muted text-xs">
-										Acceptance • Frequency • Links • Done
+										Acceptance • Frequency • Links • Notes
 									</div>
 								</div>
 							</div>
@@ -293,7 +306,7 @@ export function FilePreviewPage() {
 												</div>
 
 												{/* RIGHT HALF: 5 items share this 50% */}
-												<div className="grid grid-cols-5 items-center gap-3">
+												<div className="grid grid-cols-6 items-center justify-items-center gap-3">
 													<div className="muted text-sm">
 														{formatAcceptance(r.acceptanceRate)}
 													</div>
@@ -326,8 +339,35 @@ export function FilePreviewPage() {
 																<Video className="h-6 w-6" />
 															</a>
 														) : (
-															<span className="muted text-sm">-</span>
+															<MinusCircle className="h-6 w-6" />
 														)}
+													</div>
+
+													<div>
+														<button
+															type="button"
+															aria-label="Open notes"
+															onClick={() => {
+																noteModal.open({
+																	link: r.link,
+																	title: r.title,
+																	difficulty: r.difficulty,
+																	progress: prog,
+																});
+															}}
+															className={[
+																"btn",
+																prog?.notes || prog?.minutes
+																	? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+																	: "",
+															].join(" ")}
+														>
+															{prog?.notes || prog?.minutes ? (
+																<MessageSquareText className="h-6 w-6" />
+															) : (
+																<MessageSquarePlus className="h-6 w-6" />
+															)}
+														</button>
 													</div>
 
 													<div className="flex items-center justify-end">
@@ -396,7 +436,7 @@ export function FilePreviewPage() {
 													</div>
 												</div>
 
-												<div className="flex items-center gap-2">
+												<div className="flex items-center gap-2 pt-2">
 													<a
 														className="btn"
 														href={r.link}
@@ -418,6 +458,31 @@ export function FilePreviewPage() {
 															<Video className="h-6 w-6" />
 														</a>
 													) : null}
+
+													<button
+														type="button"
+														aria-label="Open notes"
+														onClick={() => {
+															noteModal.open({
+																link: r.link,
+																title: r.title,
+																difficulty: r.difficulty,
+																progress: prog,
+															});
+														}}
+														className={[
+															"btn",
+															prog?.notes || prog?.minutes
+																? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+																: "",
+														].join(" ")}
+													>
+														{prog?.notes || prog?.minutes ? (
+															<MessageSquareText className="h-6 w-6" />
+														) : (
+															<MessageSquarePlus className="h-6 w-6" />
+														)}
+													</button>
 												</div>
 											</div>
 										</div>
@@ -437,6 +502,16 @@ export function FilePreviewPage() {
 					</>
 				) : null}
 			</div>
+			{noteModal.state.open ? (
+				<ProblemNoteModal
+					open={noteModal.state.open}
+					onClose={noteModal.close}
+					link={noteModal.state.item.link}
+					title={noteModal.state.item.title}
+					difficulty={noteModal.state.item.difficulty}
+					progress={noteModal.state.item.progress}
+				/>
+			) : null}
 		</div>
 	);
 }

@@ -1,9 +1,9 @@
-// file: src/storage/useProgressMap.ts
+// file: src/hooks/useProgressMap.ts
 
 import { liveQuery } from "dexie";
 import { useEffect, useMemo, useState } from "react";
-import type { ProblemProgress } from "./db";
-import { getProgressMap } from "./progress";
+import type { ProblemProgress } from "../storage/db.ts";
+import { getProgressMap } from "../storage/progress.ts";
 
 /**
  * useProgressMap
