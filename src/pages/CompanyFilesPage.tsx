@@ -6,7 +6,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { fetchManifest } from "../data/manifest";
 import { formatListLabel } from "../domain/normalize";
 import type { ManifestCompany, ManifestFile } from "../domain/types";
-import { readPrefs, writePinnedCompanies } from "../storage/prefs";
+import { usePinnedCompanies } from "../storage/usePinnedCompanies.ts";
 import { clampPins } from "../utils/functions.ts";
 
 type LoadStateCompany =
@@ -52,25 +52,18 @@ export function CompanyFilesPage() {
 		return () => ac.abort();
 	}, [companyName]);
 
-	const prefs = readPrefs();
-	const pinnedSet = useMemo(
-		() => new Set(prefs.pinnedCompanies),
-		[prefs.pinnedCompanies],
-	);
-
-	const pinned = companyName ? pinnedSet.has(companyName) : false;
+	const { pinned, pinnedSet, setPinned } = usePinnedCompanies();
 	const pinDisabled = !!companyName && !pinned && pinnedSet.size >= 5;
 
 	const togglePin = () => {
 		if (!companyName) return;
 
-		const pinnedArr = Array.from(pinnedSet);
-		const next = pinned
+		const pinnedArr = [...pinned];
+		const next = pinnedSet.has(companyName)
 			? pinnedArr.filter((x) => x !== companyName)
 			: clampPins([companyName, ...pinnedArr]);
 
-		writePinnedCompanies(next);
-		window.location.reload();
+		setPinned(next);
 	};
 
 	const files: readonly ManifestFile[] = useMemo(() => {

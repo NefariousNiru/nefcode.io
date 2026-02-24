@@ -459,30 +459,30 @@ export function FilePreviewPage() {
 														</a>
 													) : null}
 
-                                                    <button
-                                                        type="button"
-                                                        aria-label="Open notes"
-                                                        onClick={() => {
-                                                            noteModal.open({
-                                                                link: r.link,
-                                                                title: r.title,
-                                                                difficulty: r.difficulty,
-                                                                progress: prog,
-                                                            });
-                                                        }}
-                                                        className={[
-                                                            "btn",
-                                                            prog?.notes || prog?.minutes
-                                                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                                                                : "",
-                                                        ].join(" ")}
-                                                    >
-                                                        {prog?.notes || prog?.minutes ? (
-                                                            <MessageSquareText className="h-6 w-6" />
-                                                        ) : (
-                                                            <MessageSquarePlus className="h-6 w-6" />
-                                                        )}
-                                                    </button>
+													<button
+														type="button"
+														aria-label="Open notes"
+														onClick={() => {
+															noteModal.open({
+																link: r.link,
+																title: r.title,
+																difficulty: r.difficulty,
+																progress: prog,
+															});
+														}}
+														className={[
+															"btn",
+															prog?.notes || prog?.minutes
+																? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+																: "",
+														].join(" ")}
+													>
+														{prog?.notes || prog?.minutes ? (
+															<MessageSquareText className="h-6 w-6" />
+														) : (
+															<MessageSquarePlus className="h-6 w-6" />
+														)}
+													</button>
 												</div>
 											</div>
 										</div>

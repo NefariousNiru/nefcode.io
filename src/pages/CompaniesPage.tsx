@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { fetchManifest } from "../data/manifest";
 import type { ManifestCompany } from "../domain/types";
 import { useCompanyStatsLazy } from "../domain/useCompanyStatsLazy";
-import { readPrefs, writePinnedCompanies } from "../storage/prefs";
+import { usePinnedCompanies } from "../storage/usePinnedCompanies.ts";
 import { clampPins } from "../utils/functions.ts";
 
 type LoadStateCompanies =
@@ -54,11 +54,7 @@ export function CompaniesPage() {
 		return () => ac.abort();
 	}, []);
 
-	const prefs = readPrefs();
-	const pinnedSet = useMemo(
-		() => new Set(prefs.pinnedCompanies),
-		[prefs.pinnedCompanies],
-	);
+	const { pinned, pinnedSet, setPinned } = usePinnedCompanies();
 
 	const companies = useMemo(() => {
 		if (state.kind !== "ready") return [];
@@ -127,15 +123,14 @@ export function CompaniesPage() {
 	});
 
 	const togglePin = (company: string) => {
-		const pinned = Array.from(pinnedSet);
+		const pinnedArr = [...pinned];
 		const isPinned = pinnedSet.has(company);
 
 		const next = isPinned
-			? pinned.filter((x) => x !== company)
-			: clampPins([company, ...pinned]);
+			? pinnedArr.filter((x) => x !== company)
+			: clampPins([company, ...pinnedArr]);
 
-		writePinnedCompanies(next);
-		window.location.reload();
+		setPinned(next);
 	};
 
 	return (
