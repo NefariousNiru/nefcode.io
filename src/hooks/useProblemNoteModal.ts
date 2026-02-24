@@ -1,8 +1,8 @@
 // file: src/components/ui/useProblemNoteModal.ts
 
 import { useCallback, useState } from "react";
-import type { Difficulty } from "../../domain/types.ts";
-import type { ProblemProgress } from "../../storage/db.ts";
+import type { Difficulty } from "../domain/types.ts";
+import type { ProblemProgress } from "../storage/db.ts";
 
 export type NoteModalItem = {
 	readonly link: string;

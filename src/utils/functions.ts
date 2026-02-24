@@ -74,7 +74,7 @@ export function difficultyClass(d: Difficulty): string {
  * Get title of problem from LC link
  * @param link A leetcode url
  */
-export function prettyProblemLabel(link: string): string {
+export function prettyProblemLink(link: string): string {
 	try {
 		const u = new URL(link);
 		const parts = u.pathname.split("/").filter(Boolean);

@@ -4,7 +4,7 @@ import type * as React from "react";
 import type { Difficulty } from "../../domain/types";
 import type { SummaryStats } from "../../stats/statsMath";
 import { summarize } from "../../stats/statsMath";
-import { prettyProblemLabel } from "../../utils/functions.ts";
+import { prettyProblemLink } from "../../utils/functions.ts";
 import {
 	computeStreaks,
 	dayKeyLocal,
@@ -356,7 +356,7 @@ function OutlierCard(props: {
 									className="truncate text-sm font-medium underline decoration-[rgba(var(--fg),0.25)] underline-offset-4 hover:decoration-[rgba(var(--fg),0.55)]"
 									title={o.link}
 								>
-									{prettyProblemLabel(o.link)}
+									{prettyProblemLink(o.link)}
 								</a>
 								<div className="muted mt-0.5 text-xs">{diffLabel(o.d)}</div>
 							</div>

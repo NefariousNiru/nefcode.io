@@ -13,11 +13,11 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ProblemNoteModal } from "../components/ui/ProblemNoteModal.tsx";
-import { useProblemNoteModal } from "../components/ui/useProblemNoteModal.ts";
 import { loadCsv } from "../data/csv";
 import { loadVideoSolutionIndex } from "../data/videoSolutions";
 import { formatListLabel } from "../domain/normalize";
 import type { Difficulty, ProblemRow } from "../domain/types";
+import { useProblemNoteModal } from "../hooks/useProblemNoteModal.ts";
 import { useProgressMap } from "../hooks/useProgressMap.ts";
 import { upsertRecentFile } from "../storage/prefs";
 import { toggleCompleted } from "../storage/progress";

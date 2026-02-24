@@ -1,8 +1,10 @@
 // file: src/components/layout/AppShell.tsx
 
-import { Rocket, Search } from "lucide-react";
+import { Menu, Rocket, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Footer } from "./Footer";
+import { GlobalSearch } from "./GlobalSearch";
 
 function BackgroundBubbles() {
 	const bubbles = [
@@ -32,6 +34,48 @@ function BackgroundBubbles() {
 
 function TopNav() {
 	const navigate = useNavigate();
+	const [mobileOpen, setMobileOpen] = useState(false);
+
+	const panelRef = useRef<HTMLDivElement | null>(null);
+	const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
+
+	// Close on route change (prevents "stuck open" after navigation)
+	useEffect(() => {
+		setMobileOpen(false);
+	}, []);
+
+	// Close on Escape + outside click/tap
+	useEffect(() => {
+		if (!mobileOpen) return;
+
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setMobileOpen(false);
+		};
+
+		const onPointerDown = (e: PointerEvent) => {
+			const target = e.target as Node | null;
+			if (!target) return;
+
+			const panel = panelRef.current;
+			const toggle = toggleBtnRef.current;
+
+			// If click is inside panel or on toggle button, ignore
+			if (panel?.contains(target)) return;
+			if (toggle?.contains(target)) return;
+
+			setMobileOpen(false);
+		};
+
+		document.addEventListener("keydown", onKeyDown);
+		document.addEventListener("pointerdown", onPointerDown, { capture: true });
+
+		return () => {
+			document.removeEventListener("keydown", onKeyDown);
+			document.removeEventListener("pointerdown", onPointerDown, {
+				capture: true,
+			});
+		};
+	}, [mobileOpen]);
 
 	return (
 		<header className="sticky top-0 z-20">
@@ -71,28 +115,66 @@ function TopNav() {
 							</nav>
 						</div>
 
-						<div className="hidden w-[460px] max-w-[48vw] items-center gap-2 md:flex">
-							<div className="relative w-full">
-								<Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 opacity-70" />
-								<input
-									className="input pl-11"
-									placeholder="Search (stub) - companies, lists, problems..."
-									onChange={() => {
-										// skeleton no-op
-									}}
-								/>
+						<div className="hidden md:flex items-center ml-auto">
+							<div
+								className="
+                                          relative
+                                          w-[560px] max-w-[56vw]
+                                          md:w-[620px] md:max-w-[52vw]
+                                          lg:w-[760px] lg:max-w-none
+                                        "
+							>
+								<GlobalSearch />
 							</div>
-							<Link className="btn btn-primary" to="/companies">
-								Start
-							</Link>
 						</div>
 
-						<div className="md:hidden">
+						{/* Mobile */}
+						<div className="flex items-center gap-2 md:hidden">
+							<button
+								ref={toggleBtnRef}
+								type="button"
+								className="btn btn-ghost"
+								onClick={() => setMobileOpen((v) => !v)}
+								aria-label={mobileOpen ? "Close menu" : "Open menu"}
+								aria-expanded={mobileOpen}
+								aria-controls="mobile-menu"
+							>
+								{mobileOpen ? (
+									<X className="h-5 w-5" />
+								) : (
+									<Menu className="h-5 w-5" />
+								)}
+							</button>
+
 							<Link className="btn btn-primary" to="/companies">
 								Browse
 							</Link>
 						</div>
 					</div>
+
+					{/* Mobile menu panel */}
+					{mobileOpen ? (
+						<div className="mt-3 md:hidden" id="mobile-menu" ref={panelRef}>
+							<div className="card p-4">
+								<div className="relative mt-3">
+									<GlobalSearch placeholder="Search…" />
+								</div>
+
+								<div className="mt-4 grid grid-cols-2 gap-2">
+									<Link className="btn" to="/companies">
+										Browse Companies
+									</Link>
+									<Link className="btn" to="/stats">
+										See Stats
+									</Link>
+								</div>
+
+								<div className="mt-3 muted text-xs">
+									Tap outside the menu to close.
+								</div>
+							</div>
+						</div>
+					) : null}
 				</div>
 			</div>
 		</header>
