@@ -318,7 +318,7 @@
 
 @layer utilities {
 	.container-x {
-		@apply mx-auto w-full max-w-4/5 px-4 sm:px-6 lg:px-8;
+		@apply mx-auto w-full md:max-w-4/5 lg:max-w-4/5 px-4 sm:px-2 lg:px-8;
 	}
 
 	.grid-auto-fit {
