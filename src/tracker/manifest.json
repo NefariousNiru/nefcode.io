@@ -1,0 +1,31 @@
+{
+	"manifest_version": 3,
+	"name": "NefCode Tracker",
+	"version": "1.0.0",
+	"description": "Auto-track LeetCode solve time and save notes.",
+	"permissions": ["storage"],
+	"host_permissions": ["https://leetcode.com/*"],
+	"background": { "service_worker": "dist/background.js", "type": "module" },
+	"icons": { "128": "icons/default_128.png" },
+	"action": {
+		"default_icon": {
+			"16": "icons/default_128.png",
+			"32": "icons/default_128.png",
+			"48": "icons/default_128.png",
+			"128": "icons/default_128.png"
+		}
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://leetcode.com/problems/*"],
+			"js": ["dist/content_leetcode.js"],
+			"run_at": "document_idle"
+		}
+	],
+	"web_accessible_resources": [
+		{
+			"resources": ["dist/save/*", "icons/*"],
+			"matches": ["<all_urls>"]
+		}
+	]
+}

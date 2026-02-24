@@ -1,0 +1,51 @@
+<!-- file: tracker/src/save/save.html -->
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NefCode - Save Attempt</title>
+    <link rel="stylesheet" href="./save.css" />
+</head>
+<body>
+<div class="wrap">
+    <div class="glass" style="padding: 16px;">
+        <div class="row" style="justify-content: space-between;">
+            <div>
+                <h1 class="h1">Save attempt</h1>
+                <div class="muted" style="margin-top: 4px; font-size: 12px;">
+                    Add notes (optional).
+                </div>
+            </div>
+            <button id="closeBtn" class="btn btn-ghost" type="button">Close</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div id="meta" class="card" style="padding: 14px;">
+            <div class="muted">Loading…</div>
+        </div>
+
+        <div style="height: 12px;"></div>
+
+        <div class="card" style="padding: 14px;">
+            <div class="muted" style="font-size: 12px; font-weight: 700;">Notes</div>
+            <div style="height: 8px;"></div>
+            <textarea id="notes" class="input" placeholder="Key idea, pitfalls, pattern, edge cases..."></textarea>
+
+            <div style="height: 12px;"></div>
+
+            <div class="row" style="justify-content: flex-end;">
+                <button id="discardBtn" class="btn" type="button">Cancel</button>
+                <button id="saveBtn" class="btn btn-primary" type="button">Save</button>
+            </div>
+
+            <div id="status" class="muted" style="margin-top: 10px; font-size: 12px;"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="./save.js"></script>
+</body>
+</html>

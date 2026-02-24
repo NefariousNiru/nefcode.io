@@ -1,0 +1,13 @@
+{
+	"name": "nefcode-tracker",
+	"private": true,
+	"type": "module",
+	"devDependencies": {
+		"@types/chrome": "^0.0.284",
+		"esbuild": "^0.25.0",
+		"typescript": "^5.6.3"
+	},
+	"scripts": {
+		"build": "node ./scripts/build.mjs"
+	}
+}
