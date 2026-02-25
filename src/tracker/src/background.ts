@@ -45,7 +45,38 @@ function openNefcode(): void {
 
 chrome.action.onClicked.addListener(() => openNefcode());
 
-// ---- circuit breaker: stop popup storms ----
+// -----------------------------
+// Track per-tab activity via Port
+// -----------------------------
+const activeTabs = new Set<number>(); // tabIds currently tracking
+
+function recomputeIcon(): void {
+	setActionIcon(activeTabs.size > 0);
+}
+
+// content script connects once per tab
+chrome.runtime.onConnect.addListener((port) => {
+	if (port.name !== "nefcode-tracker") return;
+
+	const tabId = port.sender?.tab?.id;
+	if (typeof tabId !== "number") return;
+
+	LOG("port connected tab", tabId);
+
+	// On disconnect (tab closed / navigated away / renderer killed), force clear.
+	port.onDisconnect.addListener(() => {
+		if (activeTabs.delete(tabId)) {
+			LOG("port disconnected -> cleared active tab", tabId);
+			recomputeIcon();
+		} else {
+			LOG("port disconnected tab", tabId);
+		}
+	});
+});
+
+// -----------------------------
+// Circuit breaker: stop popup storms
+// -----------------------------
 let popupInFlight = false;
 let lastPopupAt = 0;
 const POPUP_COOLDOWN_MS = 10_000;
@@ -64,7 +95,6 @@ async function openSaveUI(draftId: string): Promise<void> {
 		`dist/save/save.html?draftId=${encodeURIComponent(draftId)}`,
 	);
 
-	// Preferred: popup
 	try {
 		const win = await chrome.windows.create({
 			url,
@@ -86,13 +116,25 @@ async function openSaveUI(draftId: string): Promise<void> {
 	await chrome.tabs.create({ url });
 }
 
+// -----------------------------
+// Messages
+// -----------------------------
 chrome.runtime.onMessage.addListener(
-	(req: RuntimeRequest, _sender, sendResponse) => {
+	(req: RuntimeRequest, sender, sendResponse) => {
 		const run = async (): Promise<RuntimeResponse> => {
 			try {
 				switch (req.kind) {
 					case "ICON_SET": {
-						setActionIcon(!!req.active);
+						// Associate activity with sender.tab.id so we can clear on disconnect
+						const tabId = sender.tab?.id;
+						if (typeof tabId === "number") {
+							if (req.active) activeTabs.add(tabId);
+							else activeTabs.delete(tabId);
+							recomputeIcon();
+						} else {
+							// fallback: still update icon
+							setActionIcon(!!req.active);
+						}
 						return { ok: true };
 					}
 
@@ -116,9 +158,7 @@ chrome.runtime.onMessage.addListener(
 					}
 
 					case "DRAFT_GET": {
-						const d = await getDraft(req.draftId);
-						LOG("draft get", req.draftId, "found:", !!d);
-						return { ok: true, draft: d };
+						return { ok: true, draft: await getDraft(req.draftId) };
 					}
 
 					case "DRAFT_SAVE": {
@@ -134,7 +174,6 @@ chrome.runtime.onMessage.addListener(
 
 					case "DRAFT_DISCARD": {
 						await deleteDraft(req.draftId);
-						LOG("draft discarded", req.draftId);
 						return { ok: true };
 					}
 
